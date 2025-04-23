@@ -1,0 +1,29 @@
+{
+  "name": "discord-ai-chat-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts"
+  },
+  "dependencies": {
+    "@langchain/community": "^0.3.41",
+    "@langchain/core": "^0.3.45",
+    "@langchain/ollama": "^0.2.0",
+    "axios": "^1.8.4",
+    "discord.js": "^14.18.0",
+    "dotenv": "^16.5.0",
+    "mammoth": "^1.9.0",
+    "officeparser": "^5.1.1",
+    "pdf-parse": "^1.1.1",
+    "word-extractor": "^1.0.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.1",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  }
+}
