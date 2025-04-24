@@ -51,19 +51,22 @@ const handleFileProcessing = async (
   documents: Document<Record<string, any>>[]
 ) => {
   const splitter = new RecursiveCharacterTextSplitter({
-    chunkSize: 1200,
-    chunkOverlap: 200,
+    chunkSize: 2000,
+    chunkOverlap: 300,
   });
   const splitDocs = await splitter.splitDocuments(documents || []);
 
   console.log('Creating vector store...');
-  const embeddings = new OllamaEmbeddings();
+  const embeddings = new OllamaEmbeddings({
+    model: 'nomic-embed-text',
+  });
   const vectorStore = await MemoryVectorStore.fromDocuments(
     splitDocs,
     embeddings
   );
   const retriever = vectorStore.asRetriever({
-    k: 10,
+    k: 3,
+    searchType: 'similarity',
   });
 
   return retriever;

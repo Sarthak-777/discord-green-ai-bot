@@ -10,6 +10,8 @@ import {
   updateMessageCache,
 } from './helpers/getMessageHistory';
 import { handleFileCommand } from './helpers/fileContextMessage';
+import { handleSuggestRoleCommand } from './helpers/suggestRole';
+import { handleWriteContentCommand } from './helpers/writeContentCommand';
 
 dotenv.config();
 
@@ -40,7 +42,20 @@ discordClient.on(Events.MessageCreate, async (message) => {
   if (message.content.startsWith('!file')) {
     await handleFileCommand(message);
   }
+
+  if (message.content.startsWith('!suggestRole')) {
+    await handleSuggestRoleCommand(message);
+  }
+
+  if (message.content.startsWith('!write')) {
+    await handleWriteContentCommand(message);
+  }
+
+  if (message.content.startsWith('!help')) {
+    await message.reply(
+      'Available commands: `!summarize`, `!userSummary`, `!ask`, `!file`, `!suggestRole`, `!write`, ``!help`'
+    );
+  }
 });
 
-// Bot login
 discordClient.login(process.env.DISCORD_TOKEN);

@@ -69,7 +69,7 @@ export async function handleUserSummaryCommand(message: Message) {
     return;
   }
 
-  await message.reply(
+  const processingMsg = await message.reply(
     `Fetching and summarizing messages from ${targetUser.username}...`
   );
 
@@ -82,16 +82,14 @@ export async function handleUserSummaryCommand(message: Message) {
     );
 
     if (userMessages.length === 0) {
-      await message.reply(
+      await processingMsg.edit(
         `No messages found from ${targetUser.username} in the recent history.`
       );
       return;
     }
 
-    // Format messages for the prompt
     const messagesText = userMessages.map((msg) => msg.content).join('\n');
 
-    // Generate summary using LangChain
     const chain = userSpecificSummaryPrompt
       .pipe(model)
       .pipe(new StringOutputParser());
@@ -100,13 +98,59 @@ export async function handleUserSummaryCommand(message: Message) {
       messages: messagesText,
     });
 
-    await message.reply(
-      `**Summary of ${targetUser.username}'s messages:**\n${summary}`
-    );
+    const header = `**Summary of ${targetUser.username}'s messages:**\n`;
+    const maxContentLength = 2000 - header.length;
+
+    if (summary.length <= maxContentLength) {
+      await processingMsg.edit(`${header}${summary}`);
+    } else {
+      await processingMsg.edit(header);
+
+      const chunks = splitTextIntoChunks(summary, 1900);
+
+      for (const chunk of chunks) {
+        if (message.channel.isTextBased()) {
+          if (message.channel.isTextBased() && 'send' in message.channel) {
+            await message.channel.send(chunk);
+          }
+        }
+      }
+    }
   } catch (error) {
     console.error('Error generating user summary:', error);
-    await message.reply(
+    await processingMsg.edit(
       'Sorry, I had trouble generating a summary. Please try again later.'
     );
   }
+}
+
+function splitTextIntoChunks(text: string, maxChunkSize: number): string[] {
+  const chunks: string[] = [];
+
+  let remainingText = text;
+
+  while (remainingText.length > 0) {
+    if (remainingText.length <= maxChunkSize) {
+      chunks.push(remainingText);
+      break;
+    }
+
+    // Find a good split point
+    let splitIndex = remainingText.lastIndexOf('\n\n', maxChunkSize);
+    if (splitIndex === -1 || splitIndex < maxChunkSize / 2) {
+      splitIndex = remainingText.lastIndexOf('. ', maxChunkSize);
+    }
+    if (splitIndex === -1 || splitIndex < maxChunkSize / 2) {
+      splitIndex = remainingText.lastIndexOf(' ', maxChunkSize);
+    }
+    if (splitIndex === -1) {
+      splitIndex = maxChunkSize;
+    }
+
+    // Add the chunk and continue with remaining text
+    chunks.push(remainingText.substring(0, splitIndex + 1));
+    remainingText = remainingText.substring(splitIndex + 1);
+  }
+
+  return chunks;
 }
